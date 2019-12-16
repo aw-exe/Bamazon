@@ -1,19 +1,13 @@
   
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-const console_table = require("console.table");
+const consoleTable = require("console.table");
 
 
 const connection = mysql.createConnection({
     host: "localhost",
-  
-    // Your port; if not 3306
     port: 3306,
-  
-    // Your username
     user: "root",
-  
-    // Your password
     password: "root",
     database: "bamazon"
   });
@@ -64,7 +58,7 @@ let run = function() {
             }
 
             if (chosenProduct.stock_quantity > parseInt(answer.amount)) {
-                connection.query("UPDATE products", [
+                connection.query("UPDATE products WHERE?", [
                 {
                     stock_quantity: chosenProduct.stock_quantity - parseInt(answer.amount)
                 },
@@ -83,7 +77,7 @@ let run = function() {
                     run();
                 })
             } else {
-                console.log("Insuficient stock, please pick something else.");
+                console.log("Insuficient quantity! Please pick another item.");
                 display();
                 run();
             }
