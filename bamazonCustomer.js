@@ -16,7 +16,7 @@
       console.log(connection);
       console.log("connected as id " + connection.threadId);
       display();
-      connection.end();
+      //   connection.end();
   });
 
   const display = function () {
@@ -29,69 +29,75 @@
 
   let run = function () {
       // query database for all products available for purchase
-      connection.query("SELECT * FROM products", function (err, results) {
+      connection.query('SELECT * FROM products', function (err, results) {
           if (err) throw err;
           // prompt user which item they would like to purchase
           inquirer.prompt([{
-                  name: "product",
+                  name: "item_id",
                   type: "list",
                   choices: function () {
-                      var choiceArray = [];
-                      for (var i = 0; i < results.length; i++) {
-                          choiceArray.push(results[i].product_name);
+                      let choiceArray = [];
+                      for (let i = 0; i < results.length; i++) {
+                          choiceArray.push(results[i].item_id);
                       }
                       return choiceArray;
                   },
-                  message: "What product would you like to buy?"
+                  message: "What product (ID) would you like to buy?"
               },
               {
                   name: "amount",
                   type: "input",
                   message: "How many would you like?"
               }
-          ]).then(function (answer) {
-              let chosenProduct;
+          ]).then(function (user) {
               for (let i = 0; i < results.length; i++) {
-                  if (answer.product === results[i].product_name) {
-                      chosenProduct = results[i];
+                  if (user.item_id === results[i].item_id) {
+                      const userId = user.item_id;
+                      const userAmount = user.amount;
+                      checkOrder(userId, userAmount);
                   }
               }
-              checkOrder(chosenProduct, answer);
           });
       });
   }
 
-  let checkOrder = function (chosenProduct, answer) {
+  let checkOrder = function (userId, userAmount) {
+      connection.query(`SELECT stock_quantity,product_name,price FROM products WHERE item_id = ${userId}`, function (err, answer) {
+          if (err) throw err;
+          console.log(userAmount,answer);
+          for (let i=0; i<answer.length; i++) {
+          if (userAmount < answer[i].stock_quantity) {
 
-      if (chosenProduct.stock_quantity > answer.amount) {
-          console.log(answer)
-          connection.query(`UPDATE products SET stock_quantity = stock_quantity - ${answer.amount} WHERE item_id = ${chosenProduct.item_id}`);
-          // {
-          //     // stock_quantity: chosenProduct - parseInt(answer.amount)
+              connection.query(`UPDATE products SET stock_quantity = stock_quantity - ${userAmount} WHERE item_id = ${userId}`);
+              // {
+              //     // stock_quantity: chosenProduct - parseInt(answer.amount)
 
-          // },
-          // {
-          //     id: chosenProduct.id
+              // },
+              // {
+              //     id: chosenProduct.id
 
-          console.log("\n\n");
-          console.log("Product purchased successfully!");
-          console.log("Purchase Summary");
-          console.log("Item Name: " + chosenProduct.product_name);
-          console.log("Item Count: " + parseInt(answer.amount));
-          console.log("Total: " + "$" + (chosenProduct.price * parseInt(answer.amount)));
-          console.log("\n\n");
-          // display();
-          // run();
+              console.log("\n\n");
+              console.log("Product purchased successfully!");
+              console.log("Purchase Summary");
+              console.log("Item Name: " + answer[i].product_name);
+              console.log("Item Count: " + parseInt(userAmount));
+              console.log("Total: " + "$" + (answer[i].price * parseInt(userAmount)));
+              console.log("\n\n");
+              // display();
+              // run();
 
-      } else {
-          console.log("Insuficient quantity! Please pick another item.");
-          // display();
-          // run();
-      }
+          } else {
+              console.log("Insuficient quantity! Please pick another item.");
+              // display();
+              // run();
+          }
+        }
+        connection.end();
+      })
   }
 
 
 
 
-  display();
-  run();
+  //   display();
+  //   run();
